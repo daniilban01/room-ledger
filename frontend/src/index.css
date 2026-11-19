@@ -8,6 +8,10 @@
   --color-ink: #14161a;
   --color-accent: #1f4fd1;
   --color-negative: #b4530f;
+  /* On the dark card the base blue/orange are too dark to read (contrast < 4.5:1),
+     so the same hues are lightened there. */
+  --color-positive-on-dark: #9db8ff;
+  --color-negative-on-dark: #f5a46b;
 
   --font-sans: 'Inter', system-ui, sans-serif;
   --font-display: 'Space Grotesk', 'Inter', system-ui, sans-serif;

@@ -2,7 +2,6 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router'
 import { errorMessage } from '../api/errorMessage'
-import { useAuth } from '../auth/useAuth'
 import { Button } from '../ui/Button'
 import { Card } from '../ui/Card'
 import { ErrorText } from '../ui/ErrorText'
@@ -10,7 +9,6 @@ import { TextField } from '../ui/TextField'
 import { groupKeys, groupsApi, type GroupDetails } from './api'
 
 export function GroupsPage() {
-  const { logout } = useAuth()
   const queryClient = useQueryClient()
   const navigate = useNavigate()
   const [newGroupName, setNewGroupName] = useState('')
@@ -31,12 +29,7 @@ export function GroupsPage() {
 
   return (
     <main className="mx-auto flex min-h-dvh max-w-md flex-col gap-6 px-4 py-8">
-      <header className="flex items-center justify-between gap-4">
-        <h1 className="font-display text-3xl font-bold">Grupurile mele</h1>
-        <Button variant="secondary" onClick={logout}>
-          Ieși
-        </Button>
-      </header>
+      <h1 className="font-display text-3xl font-bold">Grupurile mele</h1>
 
       <section aria-label="Lista grupurilor" className="flex flex-col gap-3">
         {groupsQuery.isPending && <p>Se încarcă…</p>}

@@ -14,6 +14,20 @@ export function formatAmount(cents: number): string {
   return `${amountFormatter.format(cents / 100)} lei`
 }
 
+/**
+ * Balance with an explicit sign, so its meaning does not depend on color alone:
+ * 1250 -> "+12,50 lei", -1250 -> "−12,50 lei" (U+2212, the real minus sign), 0 -> "0,00 lei".
+ */
+export function formatSignedAmount(cents: number): string {
+  if (cents > 0) {
+    return `+${formatAmount(cents)}`
+  }
+  if (cents < 0) {
+    return `−${formatAmount(-cents)}`
+  }
+  return formatAmount(0)
+}
+
 /** 1250 -> "12,50", the format used to pre-fill inputs. */
 export function centsToInput(cents: number): string {
   return (cents / 100).toFixed(2).replace('.', ',')
