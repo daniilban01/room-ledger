@@ -1,0 +1,18 @@
+@import 'tailwindcss';
+
+/* Design tokens from the spec; Tailwind v4 turns them into utilities (bg-surface, text-ink, ...). */
+@theme {
+  --color-page: #f5f6f8;
+  --color-surface: #ffffff;
+  --color-border: #e1e4ea;
+  --color-ink: #14161a;
+  --color-accent: #1f4fd1;
+  --color-negative: #b4530f;
+
+  --font-sans: 'Inter', system-ui, sans-serif;
+  --font-display: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+}
+
+body {
+  @apply bg-page text-ink font-sans antialiased;
+}
