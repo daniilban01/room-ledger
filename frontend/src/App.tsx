@@ -1,11 +1,20 @@
-import { HealthStatus } from './health/HealthStatus'
+import { Navigate, Route, Routes } from 'react-router'
+import { LoginPage } from './auth/LoginPage'
+import { RegisterPage } from './auth/RegisterPage'
+import { RequireAuth } from './auth/RequireAuth'
+import { GroupPage } from './groups/GroupPage'
+import { GroupsPage } from './groups/GroupsPage'
 
 export default function App() {
   return (
-    <main className="mx-auto flex min-h-dvh max-w-md flex-col justify-center gap-6 px-4">
-      <h1 className="font-display text-4xl font-bold">RoomLedger</h1>
-      <p>Cheltuieli comune între colegii de apartament.</p>
-      <HealthStatus />
-    </main>
+    <Routes>
+      <Route path="/login" element={<LoginPage />} />
+      <Route path="/register" element={<RegisterPage />} />
+      <Route element={<RequireAuth />}>
+        <Route path="/" element={<GroupsPage />} />
+        <Route path="/groups/:groupId" element={<GroupPage />} />
+      </Route>
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
   )
 }

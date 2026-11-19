@@ -13,6 +13,12 @@ spring:
     # Keep DB sessions inside the service layer instead of the whole HTTP request.
     open-in-view: false
 
+app:
+  jwt:
+    # No default on purpose: the app refuses to start without a secret.
+    secret: ${JWT_SECRET}
+    expiration: ${JWT_EXPIRATION:1h}
+
 management:
   endpoints:
     web:
