@@ -1,5 +1,13 @@
 import { describe, expect, it } from 'vitest'
-import { centsFromApi, centsToApi, centsToInput, formatAmount, formatDate, parseAmount } from './format'
+import {
+  centsFromApi,
+  centsToApi,
+  centsToInput,
+  formatAmount,
+  formatDate,
+  formatSignedAmount,
+  parseAmount,
+} from './format'
 
 // Intl may use a non-breaking space; normalize so the assertions stay readable.
 const plain = (text: string) => text.replace(/\s/g, ' ')
@@ -16,6 +24,20 @@ describe('formatAmount', () => {
   it('always shows two decimals', () => {
     expect(plain(formatAmount(5))).toBe('0,05 lei')
     expect(plain(formatAmount(1200))).toBe('12,00 lei')
+  })
+})
+
+describe('formatSignedAmount', () => {
+  it('prefixes positive amounts with +', () => {
+    expect(plain(formatSignedAmount(1250))).toBe('+12,50 lei')
+  })
+
+  it('uses the real minus sign (U+2212) for negative amounts', () => {
+    expect(plain(formatSignedAmount(-123450))).toBe('−1.234,50 lei')
+  })
+
+  it('shows zero without a sign', () => {
+    expect(plain(formatSignedAmount(0))).toBe('0,00 lei')
   })
 })
 
