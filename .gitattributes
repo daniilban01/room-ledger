@@ -1,0 +1,13 @@
+# Store text files with LF so shell scripts (mvnw) and Docker builds work on Linux/WSL/CI.
+* text=auto eol=lf
+
+# Windows scripts need CRLF
+*.cmd text eol=crlf
+*.bat text eol=crlf
+
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.webp binary
+*.ico binary
+*.jar binary
