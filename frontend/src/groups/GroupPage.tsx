@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link, useParams } from 'react-router'
 import { errorMessage } from '../api/errorMessage'
+import { ExpenseList } from '../expenses/ExpenseList'
 import { Button } from '../ui/Button'
 import { Card } from '../ui/Card'
 import { ErrorText } from '../ui/ErrorText'
@@ -55,6 +56,8 @@ export function GroupPage() {
             )}
             <ErrorText message={regenerateMutation.isError ? errorMessage(regenerateMutation.error) : null} />
           </section>
+
+          <ExpenseList groupId={groupId} />
 
           <Card>
             <h2 className="mb-3 font-display text-xl font-bold">Membri ({groupQuery.data.members.length})</h2>

@@ -6,11 +6,15 @@ import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 public interface GroupMemberRepository extends JpaRepository<GroupMember, UUID> {
 
     Optional<GroupMember> findByGroupIdAndUserId(UUID groupId, UUID userId);
+
+    @Query("select m.user.id from GroupMember m where m.group.id = :groupId")
+    Set<UUID> findUserIdsByGroupId(@Param("groupId") UUID groupId);
 
     // "join fetch" loads the related entity in the same SQL query. Without it, reading
     // member.getGroup().getName() in a loop would run one extra query per member (the N+1 problem).
