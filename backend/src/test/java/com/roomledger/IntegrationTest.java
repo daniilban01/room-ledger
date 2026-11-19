@@ -13,7 +13,9 @@ import org.springframework.test.web.servlet.ResultActions;
 import java.util.Map;
 import java.util.UUID;
 
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
@@ -53,6 +55,22 @@ public abstract class IntegrationTest {
                 .header("Authorization", bearer(token))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(body)));
+    }
+
+    protected ResultActions putJson(String url, Object body, String token) throws Exception {
+        return mockMvc.perform(put(url)
+                .header("Authorization", bearer(token))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(body)));
+    }
+
+    protected ResultActions getWithToken(String url, String token) throws Exception {
+        return mockMvc.perform(get(url).header("Authorization", bearer(token)));
+    }
+
+    /** The id of the user that owns this token, read from GET /api/me. */
+    protected String userId(String token) throws Exception {
+        return readJson(getWithToken("/api/me", token).andExpect(status().isOk())).get("id").asText();
     }
 
     protected JsonNode readJson(ResultActions result) throws Exception {

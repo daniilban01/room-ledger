@@ -2,6 +2,7 @@ import { Navigate, Route, Routes } from 'react-router'
 import { LoginPage } from './auth/LoginPage'
 import { RegisterPage } from './auth/RegisterPage'
 import { RequireAuth } from './auth/RequireAuth'
+import { ExpenseFormPage } from './expenses/ExpenseFormPage'
 import { GroupPage } from './groups/GroupPage'
 import { GroupsPage } from './groups/GroupsPage'
 
@@ -13,6 +14,8 @@ export default function App() {
       <Route element={<RequireAuth />}>
         <Route path="/" element={<GroupsPage />} />
         <Route path="/groups/:groupId" element={<GroupPage />} />
+        <Route path="/groups/:groupId/expenses/new" element={<ExpenseFormPage />} />
+        <Route path="/groups/:groupId/expenses/:expenseId" element={<ExpenseFormPage />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
