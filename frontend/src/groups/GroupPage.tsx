@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { useParams } from 'react-router'
+import { Link, useParams } from 'react-router'
 import { errorMessage } from '../api/errorMessage'
 import { useMe } from '../auth/useMe'
 import { balanceKeys, balancesApi } from '../balances/api'
@@ -26,7 +26,8 @@ export function GroupPage() {
   })
 
   return (
-    <main className="mx-auto flex max-w-md flex-col gap-6 px-4 py-6">
+    // Extra bottom padding so the floating button never covers the last card.
+    <main className="mx-auto flex max-w-md flex-col gap-6 px-4 pt-6 pb-20">
       <PageHeader title={groupQuery.data?.name ?? ''} backTo="/" />
 
       {groupQuery.isPending && <p className="text-ink/60">Se încarcă…</p>}
@@ -42,6 +43,21 @@ export function GroupPage() {
           {balancesQuery.data && <MemberBalances members={balancesQuery.data.members} meId={meId} />}
           <ExpenseList groupId={groupId} />
           <InviteCard group={groupQuery.data} />
+
+          {/* Floating action button, above the bottom navigation, where the thumb reaches on a phone. */}
+          <Link
+            to={`/groups/${groupId}/receipt`}
+            className="fixed right-4 bottom-20 flex min-h-14 items-center gap-2 rounded-full bg-accent px-5 font-semibold text-white shadow-lg shadow-accent/30 hover:bg-accent/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent sm:right-[calc(50%-14rem+1rem)]"
+          >
+            <svg viewBox="0 0 24 24" className="size-5" fill="none" stroke="currentColor" strokeWidth={2} aria-hidden="true">
+              <path
+                d="M4 8a2 2 0 0 1 2-2h1.5l1.5-2h6l1.5 2H18a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8z"
+                strokeLinejoin="round"
+              />
+              <circle cx="12" cy="12.5" r="3.5" />
+            </svg>
+            Scanează bon
+          </Link>
         </>
       )}
     </main>

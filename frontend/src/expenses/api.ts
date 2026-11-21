@@ -41,6 +41,7 @@ export type ExpenseRequest = {
   shares?: { userId: string; amount: number }[]
   items?: { name: string; amount: number; assignedTo: string[] }[]
   version?: number
+  source?: 'MANUAL' | 'RECEIPT'
 }
 
 // Nested under ['groups', groupId], so invalidating a group also refreshes its expenses.

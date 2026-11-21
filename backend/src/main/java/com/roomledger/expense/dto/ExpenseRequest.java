@@ -1,5 +1,6 @@
 package com.roomledger.expense.dto;
 
+import com.roomledger.expense.ExpenseSource;
 import com.roomledger.expense.SplitType;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Digits;
@@ -26,6 +27,8 @@ public record ExpenseRequest(
         List<UUID> participants,
         @Valid List<ShareRequest> shares,
         @Valid @Size(max = 200) List<ItemRequest> items,
+        // RECEIPT when created from a scanned receipt; MANUAL when omitted. Ignored on update.
+        ExpenseSource source,
         // The version the client loaded; required on update to detect concurrent edits.
         Long version) {
 }

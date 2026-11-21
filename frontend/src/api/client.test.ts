@@ -25,6 +25,15 @@ describe('apiFetch', () => {
     expect(headers.get('Authorization')).toBe('Bearer abc')
   })
 
+  it('lets the browser set Content-Type for file uploads', async () => {
+    fetchMock.mockResolvedValue(Response.json({ ok: true }))
+
+    await apiFetch('/api/upload', { method: 'POST', body: new FormData() })
+
+    const headers = fetchMock.mock.calls[0][1].headers as Headers
+    expect(headers.has('Content-Type')).toBe(false)
+  })
+
   it('turns a ProblemDetail response into an ApiError', async () => {
     fetchMock.mockResolvedValue(
       Response.json({ detail: 'Validation failed', errors: { name: 'must not be blank' } }, { status: 400 }),

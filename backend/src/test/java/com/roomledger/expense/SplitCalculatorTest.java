@@ -165,6 +165,33 @@ class SplitCalculatorTest {
         }
 
         @Test
+        void roundsOnceForTheWholeReceiptSoLeftoverCentsDoNotPileUpOnOnePerson() {
+            // Two odd-priced items shared by two people. Rounding per item would give A both
+            // extra cents (18.66 / 18.64); the receipt total 37.30 splits evenly.
+            List<SplitCalculator.Item> items = List.of(
+                    new SplitCalculator.Item(money("7.49"), Set.of(A, B)),
+                    new SplitCalculator.Item(money("4.99"), Set.of(A, B)),
+                    new SplitCalculator.Item(money("18.50"), Set.of(A, B)),
+                    new SplitCalculator.Item(money("6.32"), Set.of(A, B)));
+
+            assertThat(SplitCalculator.items(money("37.30"), items))
+                    .containsExactly(Map.entry(A, money("18.65")), Map.entry(B, money("18.65")));
+        }
+
+        @Test
+        void leftoverCentGoesToWhoeverLostMostInRounding() {
+            // A's exact share is 0.50 + 0.3333 = 0.8333; B's is 0.50 + 0.3333; C's is 0.3333.
+            // Whole cents: 83 + 83 + 33 = 199, one cent left. All remainders are equal (1/3), so the tie
+            // goes to A by id. With different remainders, the largest one would win regardless of id.
+            List<SplitCalculator.Item> items = List.of(
+                    new SplitCalculator.Item(money("1.00"), Set.of(A, B)),
+                    new SplitCalculator.Item(money("1.00"), Set.of(A, B, C)));
+
+            assertThat(SplitCalculator.items(money("2.00"), items))
+                    .containsExactly(Map.entry(A, money("0.84")), Map.entry(B, money("0.83")), Map.entry(C, money("0.33")));
+        }
+
+        @Test
         void rejectsItemsThatDoNotAddUpToTotal() {
             List<SplitCalculator.Item> items = List.of(new SplitCalculator.Item(money("5.00"), Set.of(A)));
 

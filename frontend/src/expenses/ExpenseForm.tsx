@@ -14,7 +14,14 @@ import { itemsTotal, splitEqual, splitExact, splitItems, type SplitResult } from
 
 type ItemRow = { key: string; name: string; amountInput: string; assignees: string[] }
 
-type Props = { me: Me; group: GroupDetails; expense?: Expense }
+/** Pre-filled values for a NEW expense, e.g. from a scanned receipt. */
+export type ExpenseDraft = {
+  description: string
+  expenseDate: string | null
+  items: { name: string; amountCents: number }[]
+}
+
+type Props = { me: Me; group: GroupDetails; expense?: Expense; draft?: ExpenseDraft }
 
 const splitTypeLabels: Record<SplitType, string> = {
   EQUAL: 'Egal',
@@ -22,18 +29,18 @@ const splitTypeLabels: Record<SplitType, string> = {
   ITEMS: 'Pe produse',
 }
 
-export function ExpenseForm({ me, group, expense }: Props) {
+export function ExpenseForm({ me, group, expense, draft }: Props) {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const members = group.members
   const allMemberIds = members.map((member) => member.userId)
 
-  // Initial state comes from the expense when editing, from sensible defaults when creating.
-  const [description, setDescription] = useState(expense?.description ?? '')
+  // Initial state: from the expense when editing, from the draft (receipt) or defaults when creating.
+  const [description, setDescription] = useState(expense?.description ?? draft?.description ?? '')
   const [amountInput, setAmountInput] = useState(expense ? centsToInput(centsFromApi(expense.totalAmount)) : '')
   const [paidBy, setPaidBy] = useState(expense?.paidBy.id ?? me.id)
-  const [expenseDate, setExpenseDate] = useState(() => expense?.expenseDate ?? todayIso())
-  const [splitType, setSplitType] = useState<SplitType>(expense?.splitType ?? 'EQUAL')
+  const [expenseDate, setExpenseDate] = useState(() => expense?.expenseDate ?? draft?.expenseDate ?? todayIso())
+  const [splitType, setSplitType] = useState<SplitType>(expense?.splitType ?? (draft ? 'ITEMS' : 'EQUAL'))
   const [participants, setParticipants] = useState<string[]>(
     expense?.splitType === 'EQUAL' ? expense.shares.map((share) => share.userId) : allMemberIds,
   )
@@ -42,16 +49,23 @@ export function ExpenseForm({ me, group, expense }: Props) {
       ? Object.fromEntries(expense.shares.map((share) => [share.userId, centsToInput(centsFromApi(share.amount))]))
       : {},
   )
-  const [items, setItems] = useState<ItemRow[]>(() =>
-    expense?.splitType === 'ITEMS'
-      ? expense.items.map((item) => ({
-          key: item.id,
-          name: item.name,
-          amountInput: centsToInput(centsFromApi(item.amount)),
-          assignees: item.assignedTo,
-        }))
-      : [],
-  )
+  const [items, setItems] = useState<ItemRow[]>(() => {
+    if (expense?.splitType === 'ITEMS') {
+      return expense.items.map((item) => ({
+        key: item.id,
+        name: item.name,
+        amountInput: centsToInput(centsFromApi(item.amount)),
+        assignees: item.assignedTo,
+      }))
+    }
+    // Receipt items start assigned to everyone: the user only removes people, which is less tapping.
+    return (draft?.items ?? []).map((item, index) => ({
+      key: `draft-${index}`,
+      name: item.name,
+      amountInput: centsToInput(item.amountCents),
+      assignees: allMemberIds,
+    }))
+  })
   const nextItemKey = useRef(0)
 
   const canEdit = !expense || expense.createdBy.id === me.id || group.myRole === 'ADMIN'
@@ -101,6 +115,7 @@ export function ExpenseForm({ me, group, expense }: Props) {
       expenseDate,
       splitType,
       version: expense?.version,
+      source: !expense && draft ? 'RECEIPT' : undefined,
     }
     if (splitType === 'EQUAL') {
       request.participants = participants
@@ -298,6 +313,21 @@ export function ExpenseForm({ me, group, expense }: Props) {
                   />
                 </div>
                 <div className="flex flex-wrap gap-2" role="group" aria-label={`Cine a consumat produsul ${index + 1}`}>
+                  {(() => {
+                    const everyone = item.assignees.length === allMemberIds.length
+                    return (
+                      <button
+                        type="button"
+                        aria-pressed={everyone}
+                        onClick={() => updateItem(item.key, { assignees: everyone ? [] : allMemberIds })}
+                        className={`min-h-11 rounded-full border px-4 text-sm font-medium focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent ${
+                          everyone ? 'border-ink bg-ink text-white' : 'border-border bg-surface'
+                        }`}
+                      >
+                        Toți
+                      </button>
+                    )
+                  })()}
                   {members.map((member) => {
                     const selected = item.assignees.includes(member.userId)
                     return (

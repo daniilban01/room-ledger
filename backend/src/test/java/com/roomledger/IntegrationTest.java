@@ -7,6 +7,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 
@@ -29,6 +30,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest(properties = "app.jwt.secret=test-secret-that-is-long-enough-for-hs256")
 @AutoConfigureMockMvc
 @Import(TestcontainersConfiguration.class)
+@ActiveProfiles("dev-fake") // FakeReceiptParser: tests never call a real LLM
+
 public abstract class IntegrationTest {
 
     protected static final String PASSWORD = "password123";

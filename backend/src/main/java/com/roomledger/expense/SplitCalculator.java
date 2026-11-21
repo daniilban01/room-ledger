@@ -72,28 +72,77 @@ public final class SplitCalculator {
         return toAmounts(cents);
     }
 
+    /**
+     * Each item is shared equally by its assignees, but rounding happens ONCE for the whole receipt,
+     * not per item. Rounding per item gives every leftover cent to the same person (the first id),
+     * so two people sharing 7.49 and 4.99 would pay 6.25 / 6.23 instead of 6.24 / 6.24.
+     *
+     * <p>To keep the exact fractions in integers, everything is scaled by the least common multiple
+     * of the group sizes: with items shared by 2 and 3 people, scale = 6, and 1 cent shared by 3
+     * becomes exactly 2 units each.
+     */
     public static SortedMap<UUID, BigDecimal> items(BigDecimal total, List<Item> items) {
         long totalCents = requirePositiveCents(total, "Total");
         if (items == null || items.isEmpty()) {
             throw new InvalidSplitException("At least one item is required");
         }
 
-        SortedMap<UUID, Long> cents = new TreeMap<>(STABLE_ORDER);
+        long scale = 1;
         long sum = 0;
         for (Item item : items) {
             long itemCents = requirePositiveCents(item.amount(), "Item amount");
             if (item.assignees() == null || item.assignees().isEmpty()) {
                 throw new InvalidSplitException("Every item must be assigned to at least one person");
             }
-            distribute(itemCents, item.assignees(), cents);
+            scale = lcm(scale, Set.copyOf(item.assignees()).size());
             sum += itemCents;
         }
-
         if (sum != totalCents) {
             throw new InvalidSplitException(
                     "Items must add up to the total %s, but they add up to %s".formatted(fromCents(totalCents), fromCents(sum)));
         }
-        return toAmounts(cents);
+
+        // Each person's exact share, in units of 1/scale cent.
+        SortedMap<UUID, Long> exactShares = new TreeMap<>(STABLE_ORDER);
+        for (Item item : items) {
+            Set<UUID> people = Set.copyOf(item.assignees());
+            // multiplyExact: fail loudly instead of overflowing silently (only possible with huge groups).
+            long perPerson = Math.multiplyExact(item.amount().movePointRight(2).longValueExact(), scale / people.size());
+            people.forEach(person -> exactShares.merge(person, perPerson, Long::sum));
+        }
+        return toAmounts(largestRemainder(exactShares, scale, totalCents));
+    }
+
+    /**
+     * Rounds exact shares (in units of 1/scale cent) down to whole cents, then gives the cents that are
+     * left to the people who lost the most in rounding; ties go by the stable order.
+     */
+    private static SortedMap<UUID, Long> largestRemainder(SortedMap<UUID, Long> exactShares, long scale, long totalCents) {
+        SortedMap<UUID, Long> cents = new TreeMap<>(STABLE_ORDER);
+        long assigned = 0;
+        for (Map.Entry<UUID, Long> share : exactShares.entrySet()) {
+            long whole = share.getValue() / scale;
+            cents.put(share.getKey(), whole);
+            assigned += whole;
+        }
+
+        List<UUID> largestRemainderFirst = exactShares.keySet().stream()
+                .sorted(Comparator.comparingLong((UUID person) -> exactShares.get(person) % scale).reversed()
+                        .thenComparing(STABLE_ORDER))
+                .toList();
+        // Always fewer leftover cents than people: each person's remainder is below one cent.
+        for (int i = 0; i < totalCents - assigned; i++) {
+            cents.merge(largestRemainderFirst.get(i), 1L, Long::sum);
+        }
+        return cents;
+    }
+
+    private static long lcm(long a, long b) {
+        return a / gcd(a, b) * b;
+    }
+
+    private static long gcd(long a, long b) {
+        return b == 0 ? a : gcd(b, a % b);
     }
 
     /** Splits {@code amountCents} equally among the people and adds each part to {@code into}. */

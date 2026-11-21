@@ -55,11 +55,19 @@ export function splitExact(totalCents: number | null, amounts: Map<string, numbe
   return { ok: true, shares }
 }
 
+const gcd = (a: number, b: number): number => (b === 0 ? a : gcd(b, a % b))
+
+/**
+ * Same algorithm as SplitCalculator.items on the backend: exact shares for the whole receipt
+ * (scaled by the least common multiple of group sizes so they stay integers), rounded ONCE,
+ * leftover cents to the largest remainders, ties by sorted id.
+ */
 export function splitItems(items: ItemDraft[]): SplitResult {
   if (items.length === 0) {
     return { ok: false, error: 'Adaugă cel puțin un produs.' }
   }
-  const shares = new Map<string, number>()
+  let scale = 1
+  let total = 0
   for (const item of items) {
     if (item.amount === null || item.amount <= 0) {
       return { ok: false, error: 'Fiecare produs trebuie să aibă un preț valid.' }
@@ -67,7 +75,30 @@ export function splitItems(items: ItemDraft[]): SplitResult {
     if (item.assignees.length === 0) {
       return { ok: false, error: 'Alege cine a consumat fiecare produs.' }
     }
-    distribute(item.amount, item.assignees, shares)
+    const people = new Set(item.assignees).size
+    scale = (scale / gcd(scale, people)) * people
+    total += item.amount
+  }
+
+  // Each person's exact share in units of 1/scale cent.
+  const exact = new Map<string, number>()
+  for (const item of items) {
+    const people = [...new Set(item.assignees)]
+    const perPerson = item.amount! * (scale / people.length)
+    people.forEach((person) => exact.set(person, (exact.get(person) ?? 0) + perPerson))
+  }
+
+  const ids = [...exact.keys()].sort()
+  const shares = new Map<string, number>()
+  let assigned = 0
+  for (const id of ids) {
+    const whole = Math.floor(exact.get(id)! / scale)
+    shares.set(id, whole)
+    assigned += whole
+  }
+  const byRemainder = [...ids].sort((a, b) => (exact.get(b)! % scale) - (exact.get(a)! % scale) || (a < b ? -1 : 1))
+  for (let i = 0; i < total - assigned; i++) {
+    shares.set(byRemainder[i], shares.get(byRemainder[i])! + 1)
   }
   return { ok: true, shares }
 }
