@@ -1,5 +1,7 @@
 package com.roomledger.expense;
 
+import com.roomledger.activity.ActivityService;
+import com.roomledger.activity.ActivityType;
 import com.roomledger.common.PageResponse;
 import com.roomledger.common.error.BadRequestException;
 import com.roomledger.common.error.ConflictException;
@@ -43,15 +45,18 @@ public class ExpenseService {
     private final GroupMemberRepository memberRepository;
     private final UserRepository userRepository;
     private final GroupAccess groupAccess;
+    private final ActivityService activityService;
 
     public ExpenseService(ExpenseRepository expenseRepository,
                           GroupMemberRepository memberRepository,
                           UserRepository userRepository,
-                          GroupAccess groupAccess) {
+                          GroupAccess groupAccess,
+                          ActivityService activityService) {
         this.expenseRepository = expenseRepository;
         this.memberRepository = memberRepository;
         this.userRepository = userRepository;
         this.groupAccess = groupAccess;
+        this.activityService = activityService;
     }
 
     @Transactional(readOnly = true)
@@ -86,7 +91,9 @@ public class ExpenseService {
         applySplit(expense, request, shares);
 
         // Flush so the INSERT runs now and generated values (createdAt) are in the response.
-        return ExpenseResponse.from(expenseRepository.saveAndFlush(expense));
+        expenseRepository.saveAndFlush(expense);
+        activityService.record(me.getGroup(), me.getUser(), ActivityType.EXPENSE_ADDED, activityPayload(expense));
+        return ExpenseResponse.from(expense);
     }
 
     @Transactional
@@ -114,7 +121,9 @@ public class ExpenseService {
         applySplit(expense, request, shares);
 
         // Flush now so the UPDATE (and its version check) runs here and the response carries the new version.
-        return ExpenseResponse.from(expenseRepository.saveAndFlush(expense));
+        expenseRepository.saveAndFlush(expense);
+        activityService.record(me.getGroup(), me.getUser(), ActivityType.EXPENSE_EDITED, activityPayload(expense));
+        return ExpenseResponse.from(expense);
     }
 
     /** Soft delete: the row stays (for the activity history) but disappears from lists and balances. */
@@ -124,6 +133,15 @@ public class ExpenseService {
         Expense expense = findExpense(groupId, expenseId);
         requireCanModify(me, expense);
         expense.markDeleted();
+        activityService.record(me.getGroup(), me.getUser(), ActivityType.EXPENSE_DELETED, activityPayload(expense));
+    }
+
+    private static Map<String, Object> activityPayload(Expense expense) {
+        return Map.of(
+                "expenseId", expense.getId().toString(),
+                "description", expense.getDescription(),
+                // Stored as text: a JSON number could come back as a double and lose precision.
+                "amount", expense.getTotalAmount().toPlainString());
     }
 
     private Expense findExpense(UUID groupId, UUID expenseId) {

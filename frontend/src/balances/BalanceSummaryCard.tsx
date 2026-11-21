@@ -28,7 +28,7 @@ export function BalanceSummaryCard({ groupId, myBalance }: Props) {
         <p className="text-sm text-white/70">{explanation}</p>
       </div>
       <Link
-        to={`/groups/${groupId}/settle`}
+        to={`/groups/${groupId}/payments`}
         className="flex min-h-11 items-center justify-center rounded-xl bg-white px-4 font-medium text-ink hover:bg-white/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
       >
         Decontează

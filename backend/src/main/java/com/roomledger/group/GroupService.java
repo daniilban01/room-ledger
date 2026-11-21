@@ -1,5 +1,7 @@
 package com.roomledger.group;
 
+import com.roomledger.activity.ActivityService;
+import com.roomledger.activity.ActivityType;
 import com.roomledger.common.error.ForbiddenException;
 import com.roomledger.common.error.NotFoundException;
 import com.roomledger.group.dto.CreateGroupRequest;
@@ -12,6 +14,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -24,17 +28,20 @@ public class GroupService {
     private final UserRepository userRepository;
     private final GroupAccess groupAccess;
     private final JoinCodeGenerator joinCodeGenerator;
+    private final ActivityService activityService;
 
     public GroupService(GroupRepository groupRepository,
                         GroupMemberRepository memberRepository,
                         UserRepository userRepository,
                         GroupAccess groupAccess,
-                        JoinCodeGenerator joinCodeGenerator) {
+                        JoinCodeGenerator joinCodeGenerator,
+                        ActivityService activityService) {
         this.groupRepository = groupRepository;
         this.memberRepository = memberRepository;
         this.userRepository = userRepository;
         this.groupAccess = groupAccess;
         this.joinCodeGenerator = joinCodeGenerator;
+        this.activityService = activityService;
     }
 
     @Transactional
@@ -43,6 +50,7 @@ public class GroupService {
         User creator = userRepository.getReferenceById(userId);
         Group group = groupRepository.save(new Group(request.name().trim(), newUniqueJoinCode(), creator));
         GroupMember membership = memberRepository.save(new GroupMember(group, creator, GroupRole.ADMIN));
+        activityService.record(group, creator, ActivityType.GROUP_CREATED, Map.of("groupName", group.getName()));
         return toDetails(membership);
     }
 
@@ -64,9 +72,14 @@ public class GroupService {
         Group group = groupRepository.findByJoinCode(joinCode.trim().toUpperCase(Locale.ROOT))
                 .orElseThrow(() -> new NotFoundException("Invalid join code"));
 
-        GroupMember membership = memberRepository.findByGroupIdAndUserId(group.getId(), userId)
-                .orElseGet(() -> memberRepository.save(
-                        new GroupMember(group, userRepository.getReferenceById(userId), GroupRole.MEMBER)));
+        Optional<GroupMember> existing = memberRepository.findByGroupIdAndUserId(group.getId(), userId);
+        if (existing.isPresent()) {
+            return toDetails(existing.get());
+        }
+
+        User user = userRepository.getReferenceById(userId);
+        GroupMember membership = memberRepository.save(new GroupMember(group, user, GroupRole.MEMBER));
+        activityService.record(group, user, ActivityType.MEMBER_JOINED, Map.of());
         return toDetails(membership);
     }
 
