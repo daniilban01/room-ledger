@@ -86,7 +86,7 @@ public class ExpenseService {
                 userRef(request.paidBy()),
                 request.expenseDate(),
                 request.splitType(),
-                ExpenseSource.MANUAL,
+                request.source() == null ? ExpenseSource.MANUAL : request.source(),
                 me.getUser());
         applySplit(expense, request, shares);
 

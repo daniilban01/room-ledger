@@ -29,7 +29,9 @@ export function setUnauthorizedHandler(handler: (() => void) | null): void {
  */
 export async function apiFetch<T>(path: string, init: RequestInit = {}): Promise<T> {
   const headers = new Headers(init.headers)
-  if (init.body !== undefined) {
+  // Only JSON bodies (strings) get this header. For FormData (file uploads) the browser must set
+  // Content-Type itself, because it includes the multipart "boundary" that separates the parts.
+  if (typeof init.body === 'string') {
     headers.set('Content-Type', 'application/json')
   }
   const token = getToken()

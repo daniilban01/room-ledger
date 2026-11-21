@@ -12,12 +12,25 @@ spring:
       ddl-auto: validate
     # Keep DB sessions inside the service layer instead of the whole HTTP request.
     open-in-view: false
+  servlet:
+    multipart:
+      # Receipt photos. Larger uploads are rejected with 413 before reaching our code.
+      max-file-size: 5MB
+      max-request-size: 6MB
 
 app:
   jwt:
     # No default on purpose: the app refuses to start without a secret.
     secret: ${JWT_SECRET}
     expiration: ${JWT_EXPIRATION:1h}
+  # Any OpenAI-compatible chat API with image support. Only used when the "dev-fake" profile is NOT active.
+  llm:
+    base-url: ${LLM_BASE_URL:https://generativelanguage.googleapis.com/v1beta/openai}
+    model: ${LLM_MODEL:}
+    api-key: ${LLM_API_KEY:}
+    timeout: ${LLM_TIMEOUT:45s}
+  receipts:
+    max-per-hour: ${RECEIPTS_MAX_PER_HOUR:10}
 
 management:
   endpoints:

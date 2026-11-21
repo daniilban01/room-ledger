@@ -58,6 +58,25 @@ describe('splitItems', () => {
     expect(sharesOf(result)).toEqual({ [A]: 984, [B]: 533, [C]: 33 })
   })
 
+  it('rounds once for the whole receipt, so leftover cents do not pile up on one person', () => {
+    const result = splitItems([
+      { amount: 749, assignees: [A, B] },
+      { amount: 499, assignees: [A, B] },
+      { amount: 1850, assignees: [A, B] },
+      { amount: 632, assignees: [A, B] },
+    ])
+    expect(sharesOf(result)).toEqual({ [A]: 1865, [B]: 1865 })
+  })
+
+  it('matches the backend on mixed group sizes', () => {
+    // Same case as SplitCalculatorTest.leftoverCentGoesToWhoeverLostMostInRounding.
+    const result = splitItems([
+      { amount: 100, assignees: [A, B] },
+      { amount: 100, assignees: [A, B, C] },
+    ])
+    expect(sharesOf(result)).toEqual({ [A]: 84, [B]: 83, [C]: 33 })
+  })
+
   it('requires a price and at least one person per item', () => {
     expect(splitItems([{ amount: null, assignees: [A] }])).toMatchObject({ ok: false })
     expect(splitItems([{ amount: 500, assignees: [] }])).toMatchObject({ ok: false })

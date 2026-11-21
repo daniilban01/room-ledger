@@ -30,7 +30,7 @@ docker compose up --build
 docker compose up -d postgres
 
 # terminal 1 (the backend refuses to start without a JWT secret)
-cd backend && JWT_SECRET=local-dev-secret-at-least-32-characters ./mvnw spring-boot:run
+cd backend && JWT_SECRET=local-dev-secret-at-least-32-characters SPRING_PROFILES_ACTIVE=dev-fake ./mvnw spring-boot:run
 
 # terminal 2
 cd frontend && npm install && npm run dev   # http://localhost:5173
