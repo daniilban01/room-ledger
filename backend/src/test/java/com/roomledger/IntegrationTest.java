@@ -10,6 +10,9 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 
+import java.math.BigDecimal;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -75,6 +78,27 @@ public abstract class IntegrationTest {
 
     protected JsonNode readJson(ResultActions result) throws Exception {
         return objectMapper.readTree(result.andReturn().getResponse().getContentAsString());
+    }
+
+    /** Creates a group as the given user (who becomes ADMIN) and returns its details. */
+    protected JsonNode createGroup(String token) throws Exception {
+        return readJson(postJson("/api/groups", Map.of("name", "Apartament"), token).andExpect(status().isCreated()));
+    }
+
+    protected void joinWithCode(String token, String joinCode) throws Exception {
+        postJson("/api/groups/join", Map.of("joinCode", joinCode), token).andExpect(status().isOk());
+    }
+
+    protected JsonNode addEqualExpense(String groupId, String token, String total, String paidBy,
+                                       List<String> participants) throws Exception {
+        Map<String, Object> body = new HashMap<>();
+        body.put("description", "Cumpărături");
+        body.put("totalAmount", new BigDecimal(total));
+        body.put("paidBy", paidBy);
+        body.put("expenseDate", "2026-11-01");
+        body.put("splitType", "EQUAL");
+        body.put("participants", participants);
+        return readJson(postJson("/api/groups/" + groupId + "/expenses", body, token).andExpect(status().isCreated()));
     }
 
     /** Registers a new user and returns their access token. */

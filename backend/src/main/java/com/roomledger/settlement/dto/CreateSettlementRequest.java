@@ -1,0 +1,16 @@
+package com.roomledger.settlement.dto;
+
+import jakarta.validation.constraints.Digits;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.Size;
+
+import java.math.BigDecimal;
+import java.util.UUID;
+
+public record CreateSettlementRequest(
+        @NotNull UUID fromUserId,
+        @NotNull UUID toUserId,
+        @NotNull @Positive @Digits(integer = 10, fraction = 2) BigDecimal amount,
+        @Size(max = 200) String note) {
+}

@@ -1,9 +1,10 @@
 import { useQuery } from '@tanstack/react-query'
-import { Link, useParams } from 'react-router'
+import { useParams } from 'react-router'
 import { errorMessage } from '../api/errorMessage'
 import { useMe } from '../auth/useMe'
 import { groupKeys, groupsApi } from '../groups/api'
 import { ErrorText } from '../ui/ErrorText'
+import { PageHeader } from '../ui/PageHeader'
 import { expenseKeys, expensesApi } from './api'
 import { ExpenseForm } from './ExpenseForm'
 
@@ -29,14 +30,8 @@ export function ExpenseFormPage() {
   const loading = meQuery.isPending || groupQuery.isPending || (expenseId !== undefined && expenseQuery.isPending)
 
   return (
-    <main className="mx-auto flex min-h-dvh max-w-md flex-col gap-6 px-4 py-8">
-      <Link
-        to={`/groups/${groupId}`}
-        className="flex min-h-11 items-center self-start font-medium text-accent underline-offset-2 hover:underline"
-      >
-        ← Înapoi la grup
-      </Link>
-      <h1 className="font-display text-3xl font-bold">{expenseId ? 'Editează cheltuiala' : 'Cheltuială nouă'}</h1>
+    <main className="mx-auto flex max-w-md flex-col gap-6 px-4 py-6">
+      <PageHeader title={expenseId ? 'Editează cheltuiala' : 'Cheltuială nouă'} backTo={`/groups/${groupId}`} />
 
       {error && <ErrorText message={errorMessage(error, { 404: 'Cheltuiala nu există sau a fost ștearsă.' })} />}
       {!error && loading && <p>Se încarcă…</p>}

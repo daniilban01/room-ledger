@@ -69,10 +69,47 @@ export function formatDate(isoDate: string): string {
   return dateFormatter.format(new Date(year, month - 1, day))
 }
 
-/** Today's date in the user's time zone as "YYYY-MM-DD" (toISOString would use UTC). */
+const dateTimeFormatter = new Intl.DateTimeFormat('ro-RO', {
+  day: 'numeric',
+  month: 'short',
+  hour: '2-digit',
+  minute: '2-digit',
+})
+
+/** An instant from the API ("2026-11-05T18:30:00Z") in the user's time zone: "5 nov., 20:30". */
+export function formatDateTime(instant: string): string {
+  return dateTimeFormatter.format(new Date(instant))
+}
+
+/** A date in the user's time zone as "YYYY-MM-DD" (toISOString would use UTC and can shift the day). */
+export function localDateKey(date: Date): string {
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${date.getFullYear()}-${month}-${day}`
+}
+
 export function todayIso(): string {
-  const now = new Date()
-  const month = String(now.getMonth() + 1).padStart(2, '0')
-  const day = String(now.getDate()).padStart(2, '0')
-  return `${now.getFullYear()}-${month}-${day}`
+  return localDateKey(new Date())
+}
+
+const dayFormatter = new Intl.DateTimeFormat('ro-RO', { day: 'numeric', month: 'long' })
+const dayWithYearFormatter = new Intl.DateTimeFormat('ro-RO', { day: 'numeric', month: 'long', year: 'numeric' })
+
+/** "Azi", "Ieri", "12 noiembrie", or "12 noiembrie 2025" for another year. */
+export function formatDayLabel(dayKey: string, now: Date = new Date()): string {
+  const yesterday = new Date(now)
+  yesterday.setDate(now.getDate() - 1)
+  if (dayKey === localDateKey(now)) return 'Azi'
+  if (dayKey === localDateKey(yesterday)) return 'Ieri'
+
+  const [year, month, day] = dayKey.split('-').map(Number)
+  const date = new Date(year, month - 1, day)
+  return (year === now.getFullYear() ? dayFormatter : dayWithYearFormatter).format(date)
+}
+
+const timeFormatter = new Intl.DateTimeFormat('ro-RO', { hour: '2-digit', minute: '2-digit' })
+
+/** "14:05" in the user's time zone. */
+export function formatTime(instant: string): string {
+  return timeFormatter.format(new Date(instant))
 }

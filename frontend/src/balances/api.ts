@@ -16,5 +16,5 @@ export const balanceKeys = {
 export const balancesApi = {
   get: (groupId: string) => apiFetch<GroupBalances>(`/api/groups/${groupId}/balances`),
   simplified: (groupId: string) =>
-    apiFetch<{ transfers: Transfer[] }>(`/api/groups/${groupId}/balances/simplified`),
+    apiFetch<{ directDebts: number; transfers: Transfer[] }>(`/api/groups/${groupId}/balances/simplified`),
 }

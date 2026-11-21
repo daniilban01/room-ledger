@@ -2,6 +2,7 @@ import type { ButtonHTMLAttributes } from 'react'
 
 type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   variant?: 'primary' | 'secondary'
+  size?: 'md' | 'sm'
 }
 
 const variants = {
@@ -9,12 +10,17 @@ const variants = {
   secondary: 'border border-border bg-surface text-ink hover:bg-page',
 }
 
-// min-h-11 = 44px, the minimum comfortable touch target on phones.
-export function Button({ variant = 'primary', type = 'button', className = '', ...props }: ButtonProps) {
+// Both sizes keep min-h-11 (44px): "sm" is only visually lighter, never a smaller touch target.
+const sizes = {
+  md: 'rounded-xl px-4 font-medium',
+  sm: 'rounded-full px-4 text-sm font-medium',
+}
+
+export function Button({ variant = 'primary', size = 'md', type = 'button', className = '', ...props }: ButtonProps) {
   return (
     <button
       type={type}
-      className={`min-h-11 rounded-xl px-4 font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:cursor-not-allowed disabled:opacity-50 ${variants[variant]} ${className}`}
+      className={`min-h-11 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:cursor-not-allowed disabled:opacity-50 ${variants[variant]} ${sizes[size]} ${className}`}
       {...props}
     />
   )
