@@ -1,0 +1,19 @@
+# Caddy gets and renews the HTTPS certificate for {$DOMAIN} automatically (Let's Encrypt)
+# and redirects http:// to https://. Everything is forwarded to the frontend's nginx,
+# which serves the React app and proxies /api to the backend.
+{$DOMAIN} {
+	encode zstd gzip
+
+	header {
+		# Browsers must use HTTPS for this site from now on.
+		Strict-Transport-Security "max-age=31536000"
+		# Do not guess content types; do not allow the app inside someone else's <iframe>.
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		# Do not advertise the server software.
+		-Server
+	}
+
+	reverse_proxy frontend:80
+}
