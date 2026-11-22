@@ -3,6 +3,8 @@ import type { Page, UserSummary } from '../expenses/api'
 
 export type ActivityType =
   | 'GROUP_CREATED'
+  | 'GROUP_RENAMED'
+  | 'GROUP_DELETED'
   | 'MEMBER_JOINED'
   | 'EXPENSE_ADDED'
   | 'EXPENSE_EDITED'
