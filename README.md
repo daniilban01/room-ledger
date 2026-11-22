@@ -1,14 +1,33 @@
-# RoomLedger
+<h1 align="center">RoomLedger</h1>
 
-[![CI](https://github.com/daniilban01/room-ledger/actions/workflows/ci.yml/badge.svg)](https://github.com/daniilban01/room-ledger/actions/workflows/ci.yml)
+<p align="center">
+  <a href="https://github.com/daniilban01/room-ledger/actions/workflows/ci.yml"><img src="https://github.com/daniilban01/room-ledger/actions/workflows/ci.yml/badge.svg" alt="CI" /></a>
+</p>
 
-Shared-expense tracker for roommates: add shared expenses (or scan a receipt), see who owes whom,
-and settle up with as few transfers as possible. The app is a ledger: it records payments made
-outside it and does not move money.
+<p align="center">
+  Shared-expense tracker for roommates: add shared expenses (or scan a receipt), see who owes whom,<br/>
+  and settle up with as few transfers as possible.<br/>
+  The app is a ledger: it records payments made outside it and does not move money.
+</p>
 
-**Live demo: https://63-184-91-32.sslip.io** — click **„Intră în contul demo”** on the login page.
-Every click creates a private sandbox with sample roommates, expenses and payments, so you can
+<p align="center">
+  <b>🔗 Live demo: <a href="https://63-184-91-32.sslip.io">https://63-184-91-32.sslip.io</a></b><br/>
+  Click <b>„Intră în contul demo”</b> on the login page.
+</p>
+
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/9722ab5d-bae4-4259-9000-8baf3c78af47" width="200" alt="RoomLedger screenshot 1" />
+  <img src="https://github.com/user-attachments/assets/635aa6b0-b746-4fac-b537-6062d31f9332" width="200" alt="RoomLedger screenshot 2" />
+  <img src="https://github.com/user-attachments/assets/02e8a5f8-dc5e-4283-9c0d-3352c041e975" width="200" alt="RoomLedger screenshot 3" />
+  <img src="https://github.com/user-attachments/assets/f1ee9653-af1f-4578-b0bc-2cd049980e9b" width="200" alt="RoomLedger screenshot 4" />
+</p>
+
+Every demo click creates a private sandbox with sample roommates, expenses and payments, so you can
 change anything without affecting other visitors. (The UI is in Romanian and built mobile-first.)
+
+**Contents:** [Features](#features) · [Tech stack](#tech-stack) · [Architecture](#architecture) · [Engineering decisions](#engineering-decisions) · [Testing](#testing) · [Run locally](#run-locally) · [Deployment](#deployment) · [Privacy note](#privacy-note)
+
+---
 
 ## Features
 
@@ -21,10 +40,12 @@ change anything without affecting other visitors. (The UI is in Romanian and bui
 
 ## Tech stack
 
-- **Backend:** Java 21, Spring Boot 3.5, Spring Security (JWT), Spring Data JPA / Hibernate, PostgreSQL 16, Flyway
-- **Frontend:** React 19, TypeScript, Vite, TanStack Query, React Router, Tailwind CSS
-- **Testing:** JUnit 5, MockMvc, Testcontainers, JaCoCo, Vitest, Testing Library
-- **DevOps:** Docker, Docker Compose, GitHub Actions, GitHub Container Registry, AWS EC2, Caddy
+| Layer | Technologies |
+|---|---|
+| **Backend** | Java 21, Spring Boot 3.5, Spring Security (JWT), Spring Data JPA / Hibernate, PostgreSQL 16, Flyway |
+| **Frontend** | React 19, TypeScript, Vite, TanStack Query, React Router, Tailwind CSS |
+| **Testing** | JUnit 5, MockMvc, Testcontainers, JaCoCo, Vitest, Testing Library |
+| **DevOps** | Docker, Docker Compose, GitHub Actions, GitHub Container Registry, AWS EC2, Caddy |
 
 ## Architecture
 
