@@ -7,11 +7,13 @@ import com.roomledger.common.error.NotFoundException;
 import com.roomledger.group.dto.CreateGroupRequest;
 import com.roomledger.group.dto.GroupDetailsResponse;
 import com.roomledger.group.dto.GroupSummaryResponse;
+import com.roomledger.group.dto.RenameGroupRequest;
 import com.roomledger.user.User;
 import com.roomledger.user.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Clock;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -29,13 +31,16 @@ public class GroupService {
     private final GroupAccess groupAccess;
     private final JoinCodeGenerator joinCodeGenerator;
     private final ActivityService activityService;
+    private final Clock clock;
 
     public GroupService(GroupRepository groupRepository,
                         GroupMemberRepository memberRepository,
                         UserRepository userRepository,
                         GroupAccess groupAccess,
                         JoinCodeGenerator joinCodeGenerator,
-                        ActivityService activityService) {
+                        ActivityService activityService,
+                        Clock clock) {
+        this.clock = clock;
         this.groupRepository = groupRepository;
         this.memberRepository = memberRepository;
         this.userRepository = userRepository;
@@ -69,7 +74,7 @@ public class GroupService {
     /** Joining a group you are already in returns the group instead of failing (idempotent). */
     @Transactional
     public GroupDetailsResponse join(UUID userId, String joinCode) {
-        Group group = groupRepository.findByJoinCode(joinCode.trim().toUpperCase(Locale.ROOT))
+        Group group = groupRepository.findByJoinCodeAndDeletedAtIsNull(joinCode.trim().toUpperCase(Locale.ROOT))
                 .orElseThrow(() -> new NotFoundException("Invalid join code"));
 
         Optional<GroupMember> existing = memberRepository.findByGroupIdAndUserId(group.getId(), userId);
@@ -86,13 +91,45 @@ public class GroupService {
     /** Invalidates the old code, e.g. after it was shared with the wrong person. */
     @Transactional
     public GroupDetailsResponse regenerateJoinCode(UUID groupId, UUID userId) {
-        GroupMember membership = groupAccess.requireMember(groupId, userId);
-        if (!membership.isAdmin()) {
-            throw new ForbiddenException("Only group admins can regenerate the join code");
-        }
+        GroupMember membership = requireAdmin(groupId, userId, "Only group admins can regenerate the join code");
         // No save() needed: the group is a managed entity, Hibernate writes the change on commit.
         membership.getGroup().changeJoinCode(newUniqueJoinCode());
         return toDetails(membership);
+    }
+
+    @Transactional
+    public GroupDetailsResponse rename(UUID groupId, UUID userId, RenameGroupRequest request) {
+        GroupMember membership = requireAdmin(groupId, userId, "Only group admins can rename the group");
+        Group group = membership.getGroup();
+        String oldName = group.getName();
+        String newName = request.name().trim();
+        if (!newName.equals(oldName)) {
+            group.rename(newName);
+            activityService.record(group, membership.getUser(), ActivityType.GROUP_RENAMED,
+                    Map.of("oldName", oldName, "newName", newName));
+        }
+        return toDetails(membership);
+    }
+
+    /**
+     * Soft delete: the group disappears for every member, but nothing is removed from the database.
+     * The event is still recorded, so the history shows who deleted the group and when.
+     */
+    @Transactional
+    public void delete(UUID groupId, UUID userId) {
+        GroupMember membership = requireAdmin(groupId, userId, "Only group admins can delete the group");
+        Group group = membership.getGroup();
+        group.markDeleted(clock.instant());
+        activityService.record(group, membership.getUser(), ActivityType.GROUP_DELETED,
+                Map.of("groupName", group.getName()));
+    }
+
+    private GroupMember requireAdmin(UUID groupId, UUID userId, String message) {
+        GroupMember membership = groupAccess.requireMember(groupId, userId);
+        if (!membership.isAdmin()) {
+            throw new ForbiddenException(message);
+        }
+        return membership;
     }
 
     private GroupDetailsResponse toDetails(GroupMember membership) {

@@ -7,7 +7,8 @@ import java.util.UUID;
 
 public interface GroupRepository extends JpaRepository<Group, UUID> {
 
-    Optional<Group> findByJoinCode(String joinCode);
+    /** Codes of deleted groups stop working. */
+    Optional<Group> findByJoinCodeAndDeletedAtIsNull(String joinCode);
 
     boolean existsByJoinCode(String joinCode);
 }

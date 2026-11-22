@@ -20,10 +20,12 @@ public class GroupAccess {
 
     /**
      * Returns the caller's membership, or throws 404. Not 403: a 403 would confirm that the
-     * group exists, letting outsiders probe for valid group ids.
+     * group exists, letting outsiders probe for valid group ids. A deleted group is treated
+     * exactly like one that never existed, so expenses, balances, payments and receipts of a
+     * deleted group all become unreachable through this single check.
      */
     public GroupMember requireMember(UUID groupId, UUID userId) {
-        return memberRepository.findByGroupIdAndUserId(groupId, userId)
+        return memberRepository.findActiveMembership(groupId, userId)
                 .orElseThrow(() -> new NotFoundException("Group not found"));
     }
 }

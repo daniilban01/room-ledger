@@ -2,6 +2,8 @@ package com.roomledger.activity;
 
 public enum ActivityType {
     GROUP_CREATED,
+    GROUP_RENAMED,
+    GROUP_DELETED,
     MEMBER_JOINED,
     EXPENSE_ADDED,
     EXPENSE_EDITED,
