@@ -18,8 +18,23 @@ jobs:
           distribution: temurin
           java-version: "21"
           cache: maven
-      # verify = compile + unit tests + Testcontainers integration tests + JaCoCo report
+      # verify = compile + unit tests + Testcontainers integration tests + JaCoCo report and coverage check
       - run: ./mvnw -B verify
+      # Coverage totals on the run's summary page. jacoco.csv columns: 6-7 = branches missed/covered,
+      # 8-9 = lines missed/covered. "always()" so the numbers also show when the coverage check failed.
+      - name: Coverage summary
+        if: always() && hashFiles('backend/target/site/jacoco/jacoco.csv') != ''
+        run: |
+          awk -F, 'NR > 1 { bm += $6; bc += $7; lm += $8; lc += $9 }
+            END { printf "### Backend test coverage\n\n| Lines | Branches |\n|---|---|\n| %.1f%% | %.1f%% |\n",
+                  100 * lc / (lm + lc), 100 * bc / (bm + bc) }' target/site/jacoco/jacoco.csv >> "$GITHUB_STEP_SUMMARY"
+      # The full HTML report (which lines are covered), downloadable from the run page.
+      - uses: actions/upload-artifact@v4
+        if: always() && hashFiles('backend/target/site/jacoco/index.html') != ''
+        with:
+          name: coverage-report
+          path: backend/target/site/jacoco/
+          retention-days: 14
 
   frontend:
     runs-on: ubuntu-latest

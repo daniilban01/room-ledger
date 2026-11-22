@@ -156,6 +156,39 @@
                             <goal>report</goal>
                         </goals>
                     </execution>
+                    <!-- Fails "mvn verify" (and CI) when coverage drops below the limits. They are set a bit
+                         under the current values (about 96% lines, 81% branches): room for small untested
+                         code, but a real drop is caught. -->
+                    <execution>
+                        <id>check</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                        <configuration>
+                            <excludes>
+                                <!-- Only the main() method that starts Spring. -->
+                                <exclude>com/roomledger/RoomLedgerApplication.class</exclude>
+                            </excludes>
+                            <rules>
+                                <rule>
+                                    <element>BUNDLE</element>
+                                    <limits>
+                                        <limit>
+                                            <counter>LINE</counter>
+                                            <value>COVEREDRATIO</value>
+                                            <minimum>0.90</minimum>
+                                        </limit>
+                                        <limit>
+                                            <counter>BRANCH</counter>
+                                            <value>COVEREDRATIO</value>
+                                            <minimum>0.75</minimum>
+                                        </limit>
+                                    </limits>
+                                </rule>
+                            </rules>
+                        </configuration>
+                    </execution>
                 </executions>
             </plugin>
         </plugins>
