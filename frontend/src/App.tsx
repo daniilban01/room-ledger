@@ -6,6 +6,7 @@ import { RegisterPage } from './auth/RegisterPage'
 import { RequireAuth } from './auth/RequireAuth'
 import { ExpenseFormPage } from './expenses/ExpenseFormPage'
 import { GroupPage } from './groups/GroupPage'
+import { GroupSettingsPage } from './groups/GroupSettingsPage'
 import { GroupsPage } from './groups/GroupsPage'
 import { ReceiptScanPage } from './receipts/ReceiptScanPage'
 import { PaymentDetailPage } from './settlements/PaymentDetailPage'
@@ -22,7 +23,8 @@ export default function App() {
         <Route element={<AppLayout />}>
           <Route path="/" element={<GroupsPage />} />
           <Route path="/groups/:groupId" element={<GroupPage />} />
-          <Route path="/groups/:groupId/payments" element={<PaymentsPage />} />
+          <Route path="/groups/:groupId/settings" element={<GroupSettingsPage />} />
+          <Route path="/groups/:groupId/payments"element={<PaymentsPage />} />
           <Route path="/groups/:groupId/payments/:settlementId" element={<PaymentDetailPage />} />
           <Route path="/groups/:groupId/activity" element={<ActivityPage />} />
           <Route path="/groups/:groupId/receipt" element={<ReceiptScanPage />} />

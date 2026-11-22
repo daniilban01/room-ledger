@@ -36,4 +36,7 @@ export const groupsApi = {
   create: (name: string) => postJson<GroupDetails>('/api/groups', { name }),
   join: (joinCode: string) => postJson<GroupDetails>('/api/groups/join', { joinCode }),
   regenerateJoinCode: (groupId: string) => postJson<GroupDetails>(`/api/groups/${groupId}/join-code`),
+  rename: (groupId: string, name: string) =>
+    apiFetch<GroupDetails>(`/api/groups/${groupId}`, { method: 'PATCH', body: JSON.stringify({ name }) }),
+  remove: (groupId: string) => apiFetch<void>(`/api/groups/${groupId}`, { method: 'DELETE' }),
 }

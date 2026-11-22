@@ -25,4 +25,10 @@ describe('describeActivity', () => {
     expect(plain(describeActivity(event('SETTLEMENT_MARKED_PAID', payload)))).toBe(expected)
     expect(plain(describeActivity(event('SETTLEMENT_RECORDED', payload)))).toBe(expected)
   })
+
+  it('describes a rename with the old and the new name', () => {
+    expect(describeActivity(event('GROUP_RENAMED', { oldName: 'Apartament', newName: 'Apartament 12' }))).toBe(
+      'Ana a redenumit grupul din „Apartament” în „Apartament 12”',
+    )
+  })
 })

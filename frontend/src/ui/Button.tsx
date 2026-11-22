@@ -1,13 +1,14 @@
 import type { ButtonHTMLAttributes } from 'react'
 
 type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
-  variant?: 'primary' | 'secondary'
+  variant?: 'primary' | 'secondary' | 'danger'
   size?: 'md' | 'sm'
 }
 
 const variants = {
   primary: 'bg-accent text-white hover:bg-accent/90',
   secondary: 'border border-border bg-surface text-ink hover:bg-page',
+  danger: 'bg-negative text-white hover:bg-negative/90',
 }
 
 // Both sizes keep min-h-11 (44px): "sm" is only visually lighter, never a smaller touch target.
