@@ -21,6 +21,11 @@ export function LoginPage() {
     onSuccess: (response) => login(response.accessToken),
   })
 
+  const demoMutation = useMutation({
+    mutationFn: authApi.demo,
+    onSuccess: (response) => login(response.accessToken),
+  })
+
   if (token) {
     return <Navigate to="/" replace />
   }
@@ -58,6 +63,19 @@ export function LoginPage() {
             {loginMutation.isPending ? 'Se conectează…' : 'Intră în cont'}
           </Button>
         </form>
+      </Card>
+      <Card className="flex flex-col gap-3">
+        <p className="text-ink/70">Vrei doar să vezi cum arată? Intră într-un apartament demo cu date de test.</p>
+        <Button variant="secondary" disabled={demoMutation.isPending} onClick={() => demoMutation.mutate()}>
+          {demoMutation.isPending ? 'Se pregătește…' : 'Intră în contul demo'}
+        </Button>
+        <ErrorText
+          message={
+            demoMutation.isError
+              ? errorMessage(demoMutation.error, { 404: 'Contul demo nu e activ pe acest server.' })
+              : null
+          }
+        />
       </Card>
       <p className="text-center">
         Nu ai cont?{' '}

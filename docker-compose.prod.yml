@@ -33,6 +33,7 @@ services:
       LLM_BASE_URL: ${LLM_BASE_URL:-}
       LLM_MODEL: ${LLM_MODEL:-}
       LLM_API_KEY: ${LLM_API_KEY:-}
+      DEMO_ENABLED: ${DEMO_ENABLED:-false}
       # The JVM sizes its heap from the container limit below, leaving room for non-heap memory.
       JAVA_TOOL_OPTIONS: -XX:MaxRAMPercentage=70
     # A hard cap so a memory leak cannot take down Postgres and the whole 2 GB server with it.
