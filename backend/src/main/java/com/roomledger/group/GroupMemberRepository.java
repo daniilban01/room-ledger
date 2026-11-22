@@ -13,6 +13,14 @@ public interface GroupMemberRepository extends JpaRepository<GroupMember, UUID> 
 
     Optional<GroupMember> findByGroupIdAndUserId(UUID groupId, UUID userId);
 
+    /** The membership in a group that has not been deleted. Every access check goes through this. */
+    @Query("""
+            select m from GroupMember m
+            join fetch m.group g
+            where g.id = :groupId and m.user.id = :userId and g.deletedAt is null
+            """)
+    Optional<GroupMember> findActiveMembership(@Param("groupId") UUID groupId, @Param("userId") UUID userId);
+
     @Query("select m.user.id from GroupMember m where m.group.id = :groupId")
     Set<UUID> findUserIdsByGroupId(@Param("groupId") UUID groupId);
 
@@ -20,8 +28,8 @@ public interface GroupMemberRepository extends JpaRepository<GroupMember, UUID> 
     // member.getGroup().getName() in a loop would run one extra query per member (the N+1 problem).
     @Query("""
             select m from GroupMember m
-            join fetch m.group
-            where m.user.id = :userId
+            join fetch m.group g
+            where m.user.id = :userId and g.deletedAt is null
             order by m.joinedAt desc
             """)
     List<GroupMember> findAllByUserIdWithGroup(@Param("userId") UUID userId);

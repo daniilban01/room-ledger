@@ -3,12 +3,17 @@ package com.roomledger.group;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.roomledger.IntegrationTest;
 import org.junit.jupiter.api.Test;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.ResultActions;
 
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -128,6 +133,75 @@ class GroupIntegrationTest extends IntegrationTest {
         assertThat(updated.get("joinCode").asText()).isNotEqualTo(oldCode);
         postJson("/api/groups/join", Map.of("joinCode", oldCode), bogdan)
                 .andExpect(status().isNotFound());
+    }
+
+    private ResultActions rename(String groupId, String name, String token) throws Exception {
+        return mockMvc.perform(patch("/api/groups/" + groupId)
+                .header("Authorization", bearer(token))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(Map.of("name", name))));
+    }
+
+    private ResultActions deleteGroup(String groupId, String token) throws Exception {
+        return mockMvc.perform(delete("/api/groups/" + groupId).header("Authorization", bearer(token)));
+    }
+
+    @Test
+    void adminRenamesGroupAndItIsRecordedInActivity() throws Exception {
+        String ana = registerUser("Ana");
+        String groupId = createGroup(ana, "Apartament").get("id").asText();
+
+        rename(groupId, "  Apartament 12  ", ana)
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.name").value("Apartament 12"));
+
+        getWithToken("/api/groups/" + groupId + "/activity", ana)
+                .andExpect(jsonPath("$.content[0].type").value("GROUP_RENAMED"))
+                .andExpect(jsonPath("$.content[0].payload.oldName").value("Apartament"))
+                .andExpect(jsonPath("$.content[0].payload.newName").value("Apartament 12"));
+    }
+
+    @Test
+    void memberCannotRenameOrDeleteGroup() throws Exception {
+        String ana = registerUser("Ana");
+        String bogdan = registerUser("Bogdan");
+        JsonNode group = createGroup(ana, "Apartament");
+        String groupId = group.get("id").asText();
+        joinGroup(bogdan, group.get("joinCode").asText());
+
+        rename(groupId, "Al meu", bogdan).andExpect(status().isForbidden());
+        deleteGroup(groupId, bogdan).andExpect(status().isForbidden());
+    }
+
+    @Test
+    void renameWithBlankNameReturns400() throws Exception {
+        String ana = registerUser("Ana");
+        String groupId = createGroup(ana, "Apartament").get("id").asText();
+
+        rename(groupId, " ", ana)
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errors.name").exists());
+    }
+
+    @Test
+    void deletedGroupDisappearsForAllMembersAndItsCodeStopsWorking() throws Exception {
+        String ana = registerUser("Ana");
+        String bogdan = registerUser("Bogdan");
+        String cristi = registerUser("Cristi");
+        JsonNode group = createGroup(ana, "Apartament");
+        String groupId = group.get("id").asText();
+        String code = group.get("joinCode").asText();
+        joinGroup(bogdan, code);
+        addEqualExpense(groupId, ana, "100.00", userId(ana), List.of(userId(ana), userId(bogdan)));
+
+        deleteGroup(groupId, ana).andExpect(status().isNoContent());
+
+        getWithToken("/api/groups", bogdan).andExpect(jsonPath("$.length()").value(0));
+        getWithToken("/api/groups/" + groupId, ana).andExpect(status().isNotFound());
+        getWithToken("/api/groups/" + groupId + "/expenses", bogdan).andExpect(status().isNotFound());
+        getWithToken("/api/groups/" + groupId + "/balances", bogdan).andExpect(status().isNotFound());
+        postJson("/api/groups/join", Map.of("joinCode", code), cristi).andExpect(status().isNotFound());
+        deleteGroup(groupId, ana).andExpect(status().isNotFound());
     }
 
     @Test

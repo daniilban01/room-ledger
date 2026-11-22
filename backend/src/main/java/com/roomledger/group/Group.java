@@ -43,6 +43,9 @@ public class Group {
     @Column(nullable = false, updatable = false)
     private Instant createdAt;
 
+    /** Set when the group is deleted (soft delete); null while it is active. */
+    private Instant deletedAt;
+
     public Group(String name, String joinCode, User createdBy) {
         this.name = name;
         this.joinCode = joinCode;
@@ -51,5 +54,13 @@ public class Group {
 
     public void changeJoinCode(String newJoinCode) {
         this.joinCode = newJoinCode;
+    }
+
+    public void rename(String newName) {
+        this.name = newName;
+    }
+
+    public void markDeleted(Instant now) {
+        this.deletedAt = now;
     }
 }
