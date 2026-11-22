@@ -31,6 +31,11 @@ app:
     timeout: ${LLM_TIMEOUT:45s}
   receipts:
     max-per-hour: ${RECEIPTS_MAX_PER_HOUR:10}
+  # One-click demo (POST /api/auth/demo): a private sandbox with sample data for every visitor.
+  # Meant for the public server only.
+  demo:
+    enabled: ${DEMO_ENABLED:false}
+    max-per-hour: ${DEMO_MAX_PER_HOUR:30}
 
 management:
   endpoints:

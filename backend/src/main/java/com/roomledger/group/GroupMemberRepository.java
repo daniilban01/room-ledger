@@ -4,6 +4,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -20,6 +21,19 @@ public interface GroupMemberRepository extends JpaRepository<GroupMember, UUID> 
             where g.id = :groupId and m.user.id = :userId and g.deletedAt is null
             """)
     Optional<GroupMember> findActiveMembership(@Param("groupId") UUID groupId, @Param("userId") UUID userId);
+
+    /** Admins of active groups created before the given time, whose email matches a LIKE pattern. */
+    @Query("""
+            select m from GroupMember m
+            join fetch m.group g
+            join fetch m.user u
+            where m.role = com.roomledger.group.GroupRole.ADMIN
+              and g.deletedAt is null
+              and g.createdAt < :before
+              and u.email like :emailPattern
+            """)
+    List<GroupMember> findActiveAdminMembershipsByEmailCreatedBefore(@Param("emailPattern") String emailPattern,
+                                                                     @Param("before") Instant before);
 
     @Query("select m.user.id from GroupMember m where m.group.id = :groupId")
     Set<UUID> findUserIdsByGroupId(@Param("groupId") UUID groupId);
